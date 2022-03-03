@@ -1,0 +1,68 @@
+version: "3.3"
+services:
+  node-master:
+    depends_on:
+      - node-worker1
+      - node-worker2
+    image: hadoop-spark:latest
+    container_name: node-master
+    hostname: node-master
+    tty: true
+    ports:
+      - "8088:8088"
+      - "9870:9870"
+      - "8042:8042"
+      - "8888:8888"
+  node-worker1:
+    image: hadoop-spark:latest
+    container_name: node-worker1
+    hostname: node-worker1
+    tty: true
+    ports:
+      - "7042:8042"
+  node-worker2:
+    image: hadoop-spark:latest
+    container_name: node-worker2
+    hostname: node-worker2
+    tty: true
+    ports:
+      - "9042:8042"
+  minio-server:
+    image: minio/minio
+    container_name: minio-server
+    hostname: minio-server
+    tty: true
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=PXASMAM2J7UX2OQG8L59
+      - MINIO_ROOT_PASSWORD=F75OR9jy9hRRXa0hseOocBiT+81ABXN8lmpBwkt1
+    command: server /data --console-address ":9001"
+    depends_on:
+      - node-master
+  metastore-db:
+    # image: postgres:13
+    build:
+      context: .
+      dockerfile: Dockerfile.metastore-db
+    container_name: metastore-db
+    hostname: metastore-db
+    tty: true
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+  hive-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.hive
+    container_name: hive-server
+    hostname: hive-server
+    depends_on:
+      - metastore-db
+      - minio-server
+    ports:
+      - "10000:10000"
+      - "10002:10002"

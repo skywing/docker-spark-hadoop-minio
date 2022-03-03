@@ -1,0 +1,5 @@
+FROM postgres:latest
+
+COPY /script_files/init-metadata-db.sh /docker-entrypoint-initdb.d
+
+EXPOSE 5432

@@ -1,0 +1,11 @@
+scikit-learn
+matplotlib
+jupyterlab
+pyspark
+numpy
+dask
+pandas
+findspark
+dask-yarn
+bash_kernel
+traitlets==5.1.1

@@ -1,0 +1,69 @@
+FROM rockylinux:latest
+
+ENV JAVA_HOME /etc/alternatives/jre_1.8.0
+ENV HADOOP_HOME /opt/hadoop
+ENV SPARK_HOME /opt/spark
+ENV HADOOP_CONF_DIR /opt/hadoop/etc/hadoop
+ENV LD_LIBRARY_PATH=${HADOOP_HOME}/lib/native
+ENV HIVE_HOME /opt/hive
+ENV MINIO_CLI_HOME /opt/minio
+ENV PATH="${HADOOP_HOME}/bin:${HADOOP_HOME}/sbin:${HIVE_HOME}/bin:${MINIO_CLI_HOME}/bin:${PATH}"
+ENV HADOOP_VERSION 3.3.1
+
+RUN yum update -y && \
+    yum install -y wget net-tools java-1.8.0-openjdk
+RUN yum install -y python39 python39-pip python39-devel
+RUN yum install -y gcc gcc-c++ make
+RUN yum install -y openssl-devel libffi-devel libpq-devel
+
+RUN wget -P /tmp/ https://dlcdn.apache.org/hadoop/common/hadoop-3.3.1/hadoop-3.3.1-aarch64.tar.gz 
+RUN tar xvf /tmp/hadoop-3.3.1-aarch64.tar.gz -C /tmp && \
+    mv /tmp/hadoop-3.3.1 ${HADOOP_HOME}
+
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.1/hadoop-aws-3.3.1.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.1034/aws-java-sdk-s3-1.11.1034.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-core/1.11.1034/aws-java-sdk-core-1.11.1034.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-dynamodb/1.11.1034/aws-java-sdk-dynamodb-1.11.1034.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-kms/1.11.1034/aws-java-sdk-kms-1.11.1034.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.1034/aws-java-sdk-s3-1.11.1034.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar
+RUN wget -P ${HADOOP_HOME}/share/hadoop/common/lib/ https://repo1.maven.org/maven2/joda-time/joda-time/2.10.13/joda-time-2.10.13.jar
+
+RUN wget -P /tmp/ https://dlcdn.apache.org/hive/hive-3.1.2/apache-hive-3.1.2-bin.tar.gz
+RUN tar xvf /tmp/apache-hive-3.1.2-bin.tar.gz -C /tmp && \
+    mv /tmp/apache-hive-3.1.2-bin ${HIVE_HOME}
+
+RUN wget -P ${HIVE_HOME}/lib/ https://jdbc.postgresql.org/download/postgresql-42.3.3.jar
+
+RUN rm -f ${HIVE_HOME}/lib/guava-19.0.jar \
+  && cp ${HADOOP_HOME}/share/hadoop/common/lib/guava-27.0-jre.jar ${HIVE_HOME}/lib \
+  && cp ${HADOOP_HOME}/share/hadoop/tools/lib/hadoop-aws-3.3.1.jar ${HIVE_HOME}/lib
+
+RUN wget -P /opt/hive/lib/ https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.11.1034/aws-java-sdk-bundle-1.11.1034.jar
+
+RUN wget -P /tmp/ https://dlcdn.apache.org/spark/spark-3.2.1/spark-3.2.1-bin-hadoop3.2.tgz
+RUN tar xvf /tmp/spark-3.2.1-bin-hadoop3.2.tgz -C /tmp && \
+    mv /tmp/spark-3.2.1-bin-hadoop3.2 ${SPARK_HOME}
+
+RUN cp ${SPARK_HOME}/jars/scala-library-2.12.15.jar ${HIVE_HOME}/lib
+RUN cp ${SPARK_HOME}/jars/spark-core_2.12-3.2.1.jar ${HIVE_HOME}/lib
+RUN cp ${SPARK_HOME}/jars/spark-network-common_2.12-3.2.1.jar ${HIVE_HOME}/lib
+RUN mkdir -p /tmp/spark-evt-log
+
+RUN mkdir -p ${MINIO_CLI_HOME}/bin 
+RUN wget -P ${MINIO_CLI_HOME}/bin https://dl.min.io/client/mc/release/linux-amd64/mc
+RUN chmod +x ${MINIO_CLI_HOME}/bin/mc
+
+RUN mkdir -p /root/.mc
+COPY /confs/minio-config.json /root/.mc/config.json
+
+COPY /confs/*.xml /opt/hadoop/etc/hadoop
+COPY /confs/hive-site.xml ${HIVE_HOME}/conf/
+COPY /confs/metastore-site.xml ${HIVE_HOME}/conf/
+COPY /script_files/bootstrap-hive.sh /bootstrap.sh
+
+EXPOSE 9083
+EXPOSE 10000
+EXPOSE 10002
+
+ENTRYPOINT ["/bin/bash", "bootstrap.sh"]

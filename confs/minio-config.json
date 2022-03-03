@@ -1,0 +1,12 @@
+{
+    "version": "10",
+    "aliases": {
+            "hive": {
+                    "url": "http://minio-server:9000",
+                    "accessKey": "PXASMAM2J7UX2OQG8L59",
+                    "secretKey": "F75OR9jy9hRRXa0hseOocBiT+81ABXN8lmpBwkt1",
+                    "api": "s3v4",
+                    "path": "auto"
+            }
+    }
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>fs.defaultFS</name>
+        <value>hdfs://node-master:8020</value>
+    </property>
+    <property>
+        <name>fs.default.name</name>
+        <value>hdfs://node-master:9000</value>
+    </property>
+    <property>
+        <name>fs.s3a.endpoint</name>
+        <description>AWS S3 endpoint to connect to.</description>
+        <value>http://minio-server:9000</value>
+    </property>
+    <property>
+        <name>fs.s3a.access.key</name>
+        <description>AWS access key ID.</description>
+        <value>PXASMAM2J7UX2OQG8L59</value>
+    </property>
+    <property>
+        <name>fs.s3a.secret.key</name>
+        <description>AWS secret key.</description>
+        <value>F75OR9jy9hRRXa0hseOocBiT+81ABXN8lmpBwkt1</value>
+    </property>
+    <property>
+        <name>fs.s3a.path.style.access</name>
+        <value>true</value>
+        <description>Enable S3 path style access.</description>
+    </property>
+    <property>
+        <name>fs.s3a.impl</name>
+        <value>org.apache.hadoop.fs.s3a.S3AFileSystem</value>
+    </property>
+</configuration>
